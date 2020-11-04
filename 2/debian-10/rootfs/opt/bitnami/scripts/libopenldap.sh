@@ -355,10 +355,10 @@ ldap_initialize() {
         else
             # Initialize OpenLDAP with schemas/tree structure
             ldap_add_schemas
+            ldap_create_tree
+
             if ! is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
                 ldap_add_custom_ldifs
-            else
-                ldap_create_tree
             fi
         fi
         ldap_stop
