@@ -264,6 +264,7 @@ objectClass: organizationalUnit
 ou: users
 
 EOF
+if  is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
     read -r -a users <<< "$(tr ',;' ' ' <<< "${LDAP_USERS}")"
     read -r -a passwords <<< "$(tr ',;' ' ' <<< "${LDAP_PASSWORDS}")"
     local index=0
@@ -293,6 +294,7 @@ objectClass: groupOfNames
 member: ${users[@]/#/cn=},${LDAP_USER_DC/#/ou=},${LDAP_ROOT}
 
 EOF
+fi
     debug_execute ldapadd -f "${LDAP_SHARE_DIR}/tree.ldif" -H "ldapi:///" -D "$LDAP_ADMIN_DN" -w "$LDAP_ADMIN_PASSWORD"
 }
 
@@ -355,10 +357,10 @@ ldap_initialize() {
         else
             # Initialize OpenLDAP with schemas/tree structure
             ldap_add_schemas
+            ldap_create_tree
+
             if ! is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
                 ldap_add_custom_ldifs
-            else
-                ldap_create_tree
             fi
         fi
         ldap_stop
