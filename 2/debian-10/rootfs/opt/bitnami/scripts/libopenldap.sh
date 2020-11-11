@@ -34,6 +34,7 @@ export LDAP_DATA_DIR="${LDAP_VOLUME_DIR}/data"
 export LDAP_ONLINE_CONF_DIR="${LDAP_VOLUME_DIR}/slapd.d"
 export LDAP_PID_FILE="${LDAP_BASE_DIR}/var/run/slapd.pid"
 export LDAP_CUSTOM_LDIF_DIR="${LDAP_CUSTOM_LDIF_DIR:-/ldifs}"
+export LDAP_CUSTOM_SCHEMA_DIR="${LDAP_CUSTOM_SCHEMA_DIR:-/ldifs}"
 export PATH="${LDAP_BIN_DIR}:${LDAP_SBIN_DIR}:$PATH"
 # Users
 export LDAP_DAEMON_USER="slapd"
@@ -297,6 +298,20 @@ EOF
 }
 
 ########################
+# Add custom schema files
+# Globals:
+#   LDAP_*
+# Arguments:
+#   None
+# Returns
+#   None
+#########################
+ldap_add_custom_schema() {
+    info "Loading custom schema files..."
+    debug_execute for f in $LDAP_CUSTOM_SCHEMA_DIR/*.ldif; do ldapadd -H 'ldapi:///' -f $f; done
+}
+
+########################
 # Add custom LDIF files
 # Globals:
 #   LDAP_*
@@ -355,6 +370,9 @@ ldap_initialize() {
         else
             # Initialize OpenLDAP with schemas/tree structure
             ldap_add_schemas
+            if ! is_dir_empty "$LDAP_CUSTOM_SCHEMA_DIR"; then
+                ldap_add_custom_schema
+            fi
             if ! is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
                 ldap_add_custom_ldifs
             else
