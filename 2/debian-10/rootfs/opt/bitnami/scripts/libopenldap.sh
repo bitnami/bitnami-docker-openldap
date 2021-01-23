@@ -329,8 +329,7 @@ EOF
 #   None
 #########################
 ldap_add_custom_ldifs() {
-    info "Loading custom LDIF files..."
-    warn "Ignoring LDAP_USERS, LDAP_PASSWORDS, LDAP_USER_DC and LDAP_GROUP environment variables..."
+    info "Loading custom LDIF files... (extra schemas won't be added, default tree won't be created)"
     find "$LDAP_CUSTOM_LDIF_DIR" -maxdepth 1 \( -type f -o -type l \) -iname '*.ldif' -print0 | sort -z | xargs --null -I{} bash -c ". /opt/bitnami/scripts/libos.sh && debug_execute ldapadd -f {} -H 'ldapi:///' -D $LDAP_ADMIN_DN -w $LDAP_ADMIN_PASSWORD"
 }
 
@@ -376,13 +375,12 @@ ldap_initialize() {
         if is_boolean_yes "$LDAP_ENABLE_TLS"; then
             ldap_configure_tls
         fi
-        if is_boolean_yes "$LDAP_SKIP_DEFAULT_TREE"; then
-            info "Skipping default schemas/tree structure"
+        if ! is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
+            ldap_add_custom_ldifs
         else
-            # Initialize OpenLDAP with schemas/tree structure
             ldap_add_schemas
-            if ! is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
-                ldap_add_custom_ldifs
+            if is_boolean_yes "$LDAP_SKIP_DEFAULT_TREE"; then
+                info "Skipping default tree creation"
             else
                 ldap_create_tree
             fi

@@ -163,6 +163,14 @@ Launch the containers using:
 $ docker-compose up -d
 ```
 
+# Database bootstrap
+
+On the first run (i.e. if the binded volume is empty), the database is initialized. The `core`, `cosine`, `inetperson`, and `nis` schemas are added, and a default LDAP tree based on the `LDAP_USERS`, `LDAP_PASSWORDS`, `LDAP_USER_DC` and `LDAP_GROUP` is created.
+
+You may skip the default tree creation (when `LDAP_SKIP_DEFAULT_TREE` is **yes**), which means there won't be any directory entry, not even the root entry (`organization` object class).
+
+You may also provide custom LDIF files (at `LDAP_CUSTOM_LDIF_DIR`). When at least one file is provided, only the `core` schema will be added, and of course the default tree will be skipped. Only files ending in `.ldif` will be used. As they are sorted by name, you are able to control their order of execution, if needed.
+
 # Configuration
 
 The Bitnami Docker OpenLDAP can be easily setup with the following environment variables:
@@ -176,7 +184,7 @@ The Bitnami Docker OpenLDAP can be easily setup with the following environment v
 - `LDAP_USER_DC`: DC for the users' organizational unit. Default: **users**
 - `LDAP_GROUP`: Group used to group created users. Default: **readers**
 - `LDAP_SKIP_DEFAULT_TREE`: Whether to skip creating the default LDAP tree based on `LDAP_USERS`, `LDAP_PASSWORDS`, `LDAP_USER_DC` and `LDAP_GROUP`. Default: **no**
-- `LDAP_CUSTOM_LDIF_DIR`: Location of a directory that contains LDIF files that should be used to bootstrap the database. Only files ending in `.ldif` will be used. Default LDAP tree based on the `LDAP_USERS`, `LDAP_PASSWORDS`, `LDAP_USER_DC` and `LDAP_GROUP` will be skipped when `LDAP_CUSTOM_LDIF_DIR` is used. When using this will override the usage of `LDAP_ROOT`,`LDAP_USERS`, `LDAP_PASSWORDS`, `LDAP_USER_DC` and `LDAP_GROUP`. Default: **/ldifs**
+- `LDAP_CUSTOM_LDIF_DIR`: Location of a directory that contains LDIF files that should be used to bootstrap the database. Default: **/ldifs**
 
 Check the official [OpenLDAP Configuration Reference](https://www.openldap.org/doc/admin24/guide.html) for more information about how to configure OpenLDAP.
 
