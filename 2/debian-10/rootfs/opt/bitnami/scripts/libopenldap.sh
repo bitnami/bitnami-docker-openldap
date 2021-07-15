@@ -35,6 +35,7 @@ export LDAP_ONLINE_CONF_DIR="${LDAP_VOLUME_DIR}/slapd.d"
 export LDAP_PID_FILE="${LDAP_BASE_DIR}/var/run/slapd.pid"
 export LDAP_CUSTOM_LDIF_DIR="${LDAP_CUSTOM_LDIF_DIR:-/ldifs}"
 export LDAP_CUSTOM_SCHEMA_FILE="${LDAP_CUSTOM_SCHEMA_FILE:-/schema/custom.ldif}"
+export LDAP_CUSTOM_RESTORE_FILE="${LDAP_CUSTOM_RESTORE_FILE:-/restore/custom.ldif}"
 export PATH="${LDAP_BIN_DIR}:${LDAP_SBIN_DIR}:$PATH"
 export LDAP_TLS_CERT_FILE="${LDAP_TLS_CERT_FILE:-}"
 export LDAP_TLS_KEY_FILE="${LDAP_TLS_KEY_FILE:-}"
@@ -292,6 +293,23 @@ ldap_add_custom_schema() {
 }
 
 ########################
+# Add custom restore
+# Globals:
+#   LDAP_*
+# Arguments:
+#   None
+# Returns
+#   None
+#########################
+ldap_add_custom_restore() {
+    info "Adding custom Restore : $LDAP_CUSTOM_RESTORE_FILE ..."
+    ldap_stop
+     while is_ldap_running; do sleep 1; done
+    debug_execute slapadd -F "$LDAP_ONLINE_CONF_DIR" -l "$LDAP_CUSTOM_RESTORE_FILE"
+    ldap_start_bg
+}
+
+#########################
 # Create LDAP tree
 # Globals:
 #   LDAP_*
@@ -428,9 +446,12 @@ ldap_initialize() {
             if [[ -f "$LDAP_CUSTOM_SCHEMA_FILE" ]]; then
                 ldap_add_custom_schema
             fi
+            if [[ -f "$LDAP_CUSTOM_RESTORE_FILE" ]]; then
+                ldap_add_custom_restore
+            fi
             if ! is_dir_empty "$LDAP_CUSTOM_LDIF_DIR"; then
                 ldap_add_custom_ldifs
-            else
+            elif [[ ! -f "$LDAP_CUSTOM_RESTORE_FILE" ]]; then
                 ldap_create_tree
             fi
         fi
